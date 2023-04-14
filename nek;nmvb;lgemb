@@ -1,0 +1,85 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Define the process structure
+typedef struct process {
+    int priority;
+    int burst_time;
+} process;
+
+// Define the three queues and their priority ranges
+process q1[100]; // highest priority range (1-5)
+int q1_size = 0;
+process q2[100]; // medium priority range (6-10)
+int q2_size = 0;
+process q3[100]; // lowest priority range (11-15)
+int q3_size = 0;
+
+// Comparator function for sorting processes by priority
+int priority_comparator(const void *p1, const void *p2) {
+    process *pp1 = (process *)p1;
+    process *pp2 = (process *)p2;
+    return pp2->priority - pp1->priority;
+}
+
+// Comparator function for sorting processes by burst time
+int burst_time_comparator(const void *p1, const void *p2) {
+    process *pp1 = (process *)p1;
+    process *pp2 = (process *)p2;
+    return pp1->burst_time - pp2->burst_time;
+}
+
+// Main function
+int main() {
+    // Prompt the user for the number of processes and their priority/burst time
+    int num_processes;
+    printf("Enter the number of processes: ");
+    scanf("%d", &num_processes);
+    for (int i = 0; i < num_processes; i++) {
+        int priority, burst_time;
+        printf("Enter the priority and burst time for process %d: ", i + 1);
+        scanf("%d %d", &priority, &burst_time);
+        // Assign process to the appropriate queue based on priority range
+        if (priority >= 1 && priority <= 5) {
+            q1[q1_size++] = (process){priority, burst_time};
+        } else if (priority >= 6 && priority <= 10) {
+            q2[q2_size++] = (process){priority, burst_time};
+        } else {
+            q3[q3_size++] = (process){priority, burst_time};
+        }
+    }
+
+    // Set the quantum time for each queue
+    int quantum_time = 10;
+
+    // Run the scheduling algorithm for each queue
+    while (q1_size > 0 || q2_size > 0 || q3_size > 0) {
+        // Process the highest priority queue with round-robin scheduling
+        if (q1_size > 0) {
+            for (int i = 0; i < quantum_time && q1_size > 0; i++) {
+                process p = q1[0];
+                for (int j = 1; j < q1_size; j++) {
+                    q1[j - 1] = q1[j];
+                }
+                q1_size--;
+                // Run the process for 3 time units
+                if (p.burst_time > 3) {
+                    p.burst_time -= 3;
+                    q1[q1_size++] = p;
+                } else {
+                    // Process has completed execution
+                }
+            }
+        }
+        // Process the medium priority queue with priority scheduling
+        if (q2_size > 0) {
+            // Sort the processes by priority
+            qsort(q2, q2_size, sizeof(process), priority_comparator);
+            process p = q2[0];
+            for (int i = 1; i < q2_size; i++) {
+                q2[i - 1] = q2[i];
+            }
+            q2_size--;
+        }
+    }
+}
